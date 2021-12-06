@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>https://www.figma.com/file/6IIyKRsnahavWU2luDEDZw/Room?node-id=0%3A1</title>
+
+    <style>
+        .slider {
+            position: relative;
+            overflow: hidden;
+            margin-left: auto;
+            margin-right: auto
+        }
+        
+        .slider__wrapper {
+            position: relative;
+            overflow: hidden;
+            background-color: #eee
+        }
+        
+        .slider__items {
+            display: flex;
+            transition: transform .5s ease
+        }
+        
+        .transition-none {
+            transition: none
+        }
+        
+        .slider__item {
+            flex: 0 0 100%;
+            max-width: 100%;
+            position: relative
+        }
+        
+        .slider__control {
+            position: absolute;
+            top: 50%;
+            width: 40px;
+            height: 50px;
+            transform: translateY(-50%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: rgba(0, 0, 0, .3);
+            opacity: .5;
+            user-select: none
+        }
+        
+        .slider__control_show {
+            display: flex
+        }
+        
+        .slider__control:focus,
+        .slider__control:hover {
+            color: #fff;
+            text-decoration: none;
+            opacity: .7
+        }
+        
+        .slider__control_prev {
+            left: 0
+        }
+        
+        .slider__control_next {
+            right: 0
+        }
+        
+        .slider__control::before {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: transparent no-repeat center center;
+            background-size: 100% 100%
+        }
+        
+        .slider__control_prev::before {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3E%3Cpath d='M5.25 0l-4 4 4 4 1.5-1.5-2.5-2.5 2.5-2.5-1.5-1.5z'/%3E%3C/svg%3E")
+        }
+        
+        .slider__control_next::before {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E")
+        }
+        
+        .slider__indicators {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 10px;
+            display: flex;
+            justify-content: center;
+            padding-left: 0;
+            margin: 0 15%;
+            list-style: none;
+            user-select: none
+        }
+        
+        .slider__indicator {
+            flex: 0 1 auto;
+            width: 30px;
+            height: 4px;
+            margin-right: 3px;
+            margin-left: 3px;
+            background-color: rgba(255, 255, 255, .5);
+            background-clip: padding-box;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            cursor: pointer
+        }
+        
+        .slider__indicator_active {
+            background-color: #fff
+        }
+    </style>
+    <script>
+        var WRAPPER_SELECTOR = ".slider__wrapper",
+            ITEMS_SELECTOR = ".slider__items",
+            ITEM_SELECTOR = ".slider__item",
+            ITEM_CLASS_ACTIVE = "slider__item_active",
+            CONTROL_SELECTOR = ".slider__control",
+            CONTROL_CLASS_SHOW = "slider__control_show",
+            INDICATOR_WRAPPER_ELEMENT = "ol",
+            INDICATOR_WRAPPER_CLASS = "slider__indicators",
+            INDICATOR_ITEM_ELEMENT = "li",
+            INDICATOR_ITEM_CLASS = "slider__indicator",
+            INDICATOR_ITEM_CLASS_ACTIVE = "slider__indicator_active",
+            SWIPE_THRESHOLD = 20,
+            TRANSITION_NONE = "transition-none";
+
+        function SimpleAdaptiveSlider(t, i) {
+            for (var e in this._$root = document.querySelector(t), this._$wrapper = this._$root.querySelector(WRAPPER_SELECTOR), this._$items = this._$root.querySelector(ITEMS_SELECTOR), this._$itemList = this._$root.querySelectorAll(ITEM_SELECTOR), this._currentIndex = 0, this._minOrder = 0, this._maxOrder = 0, this._$itemWithMinOrder = null, this._$itemWithMaxOrder = null, this._minTranslate = 0, this._maxTranslate = 0, this._direction = "next", this._balancingItemsFlag = !1, this._transform = 0, this._hasSwipeState = !1, this._swipeStartPosX = 0, this._intervalId = null, this._config = {
+                    loop: !0,
+                    autoplay: !1,
+                    interval: 5e3,
+                    swipe: !0
+                }, i) this._config.hasOwnProperty(e) && (this._config[e] = i[e]);
+            for (var s = 0, n = this._$itemList.length; s < n; s++) this._$itemList[s].dataset.order = s, this._$itemList[s].dataset.index = s, this._$itemList[s].dataset.translate = 0;
+            if (this._config.loop) {
+                var r = this._$itemList.length - 1,
+                    a = 100 * -this._$itemList.length;
+                this._$itemList[r].dataset.order = -1, this._$itemList[r].dataset.translate = 100 * -this._$itemList.length;
+                var o = "translateX(".concat(a, "%)");
+                this._$itemList[r].style.transform = o
+            }
+            this._addIndicators(), this._refreshExtremeValues(), this._setActiveClass(), this._addEventListener(), this._autoplay()
+        }
+        SimpleAdaptiveSlider.prototype._setActiveClass = function() {
+            var t, i, e, s;
+            for (t = 0, i = this._$itemList.length; t < i; t++) e = this._$itemList[t], s = parseInt(e.dataset.index), this._currentIndex === s ? e.classList.add(ITEM_CLASS_ACTIVE) : e.classList.remove(ITEM_CLASS_ACTIVE);
+            var n = this._$root.querySelectorAll("." + INDICATOR_ITEM_CLASS);
+            if (n.length)
+                for (t = 0, i = n.length; t < i; t++) e = n[t], s = parseInt(e.dataset.slideTo), this._currentIndex === s ? e.classList.add(INDICATOR_ITEM_CLASS_ACTIVE) : e.classList.remove(INDICATOR_ITEM_CLASS_ACTIVE);
+            var r = this._$root.querySelectorAll(CONTROL_SELECTOR);
+            if (r.length)
+                if (this._config.loop)
+                    for (t = 0, i = r.length; t < i; t++) r[t].classList.add(CONTROL_CLASS_SHOW);
+                else 0 === this._currentIndex ? (r[0].classList.remove(CONTROL_CLASS_SHOW), r[1].classList.add(CONTROL_CLASS_SHOW)) : this._currentIndex === this._$itemList.length - 1 ? (r[0].classList.add(CONTROL_CLASS_SHOW), r[1].classList.remove(CONTROL_CLASS_SHOW)) : (r[0].classList.add(CONTROL_CLASS_SHOW), r[1].classList.add(CONTROL_CLASS_SHOW))
+        }, SimpleAdaptiveSlider.prototype._move = function() {
+            if ("none" === this._direction) return this._$items.classList.remove(TRANSITION_NONE), void(this._$items.style.transform = "translateX(".concat(this._transform, "%)"));
+            if (!this._config.loop) {
+                if (this._currentIndex + 1 >= this._$itemList.length && "next" === this._direction) return void this._autoplay("stop");
+                if (this._currentIndex <= 0 && "prev" === this._direction) return
+            }
+            var t = "next" === this._direction ? -100 : 100,
+                i = this._transform + t;
+            "next" === this._direction ? ++this._currentIndex > this._$itemList.length - 1 && (this._currentIndex -= this._$itemList.length) : --this._currentIndex < 0 && (this._currentIndex += this._$itemList.length), this._transform = i, this._$items.style.transform = "translateX(".concat(i, "%)"), this._setActiveClass()
+        }, SimpleAdaptiveSlider.prototype._moveTo = function(t) {
+            var i = this._currentIndex;
+            this._direction = t > i ? "next" : "prev";
+            for (var e = 0; e < Math.abs(t - i); e++) this._move()
+        }, SimpleAdaptiveSlider.prototype._autoplay = function(t) {
+            if (this._config.autoplay) return "stop" === t ? (clearInterval(this._intervalId), void(this._intervalId = null)) : void(null === this._intervalId && (this._intervalId = setInterval(function() {
+                this._direction = "next", this._move()
+            }.bind(this), this._config.interval)))
+        }, SimpleAdaptiveSlider.prototype._addIndicators = function() {
+            if (!this._$root.querySelector("." + INDICATOR_WRAPPER_CLASS)) {
+                var t = document.createElement(INDICATOR_WRAPPER_ELEMENT);
+                t.className = INDICATOR_WRAPPER_CLASS;
+                for (var i = 0, e = this._$itemList.length; i < e; i++) {
+                    var s = document.createElement(INDICATOR_ITEM_ELEMENT);
+                    s.className = INDICATOR_ITEM_CLASS, s.dataset.slideTo = i, t.appendChild(s)
+                }
+                this._$root.appendChild(t)
+            }
+        }, SimpleAdaptiveSlider.prototype._refreshExtremeValues = function() {
+            var t = this._$itemList;
+            this._minOrder = parseInt(t[0].dataset.order), this._maxOrder = this._minOrder, this._$itemWithMinOrder = t[0], this._$itemWithMaxOrder = this._$itemWithMinOrder, this._minTranslate = parseInt(t[0].dataset.translate), this._maxTranslate = this._minTranslate;
+            for (var i = 0, e = t.length; i < e; i++) {
+                var s = t[i],
+                    n = parseInt(s.dataset.order);
+                n < this._minOrder ? (this._minOrder = n, this._$itemWithMinOrder = s, this._minTranslate = parseInt(s.dataset.translate)) : n > this._maxOrder && (this._maxOrder = n, this._$itemWithMaxOrder = s, this._minTranslate = parseInt(s.dataset.translate))
+            }
+        }, SimpleAdaptiveSlider.prototype._balancingItems = function() {
+            if (this._balancingItemsFlag) {
+                var t, i = this._$wrapper.getBoundingClientRect(),
+                    e = i.width / 2,
+                    s = this._$itemList.length;
+                if ("next" === this._direction) {
+                    var n = i.left,
+                        r = this._$itemWithMinOrder;
+                    t = this._minTranslate, r.getBoundingClientRect().right < n - e && (r.dataset.order = this._minOrder + s, t += 100 * s, r.dataset.translate = t, r.style.transform = "translateX(".concat(t, "%)"), this._refreshExtremeValues())
+                } else if ("prev" === this._direction) {
+                    var a = i.right,
+                        o = this._$itemWithMaxOrder;
+                    t = this._maxTranslate, o.getBoundingClientRect().left > a + e && (o.dataset.order = this._maxOrder - s, t -= 100 * s, o.dataset.translate = t, o.style.transform = "translateX(".concat(t, "%)"), this._refreshExtremeValues())
+                }
+                requestAnimationFrame(this._balancingItems.bind(this))
+            }
+        }, SimpleAdaptiveSlider.prototype._addEventListener = function() {
+            var t = this._$items;
+
+            function i(t) {
+                this._autoplay("stop");
+                var i = 0 === t.type.search("touch") ? t.touches[0] : t;
+                this._swipeStartPosX = i.clientX, this._swipeStartPosY = i.clientY, this._hasSwipeState = !0, this._hasSwiping = !1
+            }
+
+            function e(t) {
+                if (this._hasSwipeState) {
+                    var i = 0 === t.type.search("touch") ? t.touches[0] : t,
+                        e = this._swipeStartPosX - i.clientX,
+                        s = this._swipeStartPosY - i.clientY;
+                    if (!this._hasSwiping) {
+                        if (Math.abs(s) > Math.abs(e)) return void(this._hasSwipeState = !1);
+                        this._hasSwiping = !0
+                    }
+                    t.preventDefault(), this._config.loop || (this._currentIndex + 1 >= this._$itemList.length && e >= 0 && (e /= 4), this._currentIndex <= 0 && e <= 0 && (e /= 4));
+                    var n = e / this._$wrapper.getBoundingClientRect().width * 100,
+                        r = this._transform - n;
+                    this._$items.classList.add(TRANSITION_NONE), this._$items.style.transform = "translateX(".concat(r, "%)")
+                }
+            }
+
+            function s(t) {
+                if (this._hasSwipeState) {
+                    var i = 0 === t.type.search("touch") ? t.changedTouches[0] : t,
+                        e = this._swipeStartPosX - i.clientX;
+                    this._config.loop || (this._currentIndex + 1 >= this._$itemList.length && e >= 0 && (e /= 4), this._currentIndex <= 0 && e <= 0 && (e /= 4));
+                    var s = e / this._$wrapper.getBoundingClientRect().width * 100;
+                    this._$items.classList.remove(TRANSITION_NONE), s > SWIPE_THRESHOLD ? (this._direction = "next", this._move()) : s < -SWIPE_THRESHOLD ? (this._direction = "prev", this._move()) : (this._direction = "none", this._move()), this._hasSwipeState = !1, this._config.loop && this._autoplay()
+                }
+            }
+            if (this._$root.addEventListener("click", function(t) {
+                    var i = t.target;
+                    if (this._autoplay("stop"), i.classList.contains("slider__control")) t.preventDefault(), this._direction = i.dataset.slide, this._move();
+                    else if (i.dataset.slideTo) {
+                        t.preventDefault();
+                        var e = parseInt(i.dataset.slideTo);
+                        this._moveTo(e)
+                    }
+                    this._config.loop && this._autoplay()
+                }.bind(this)), this._config.loop && (t.addEventListener("transitionstart", function() {
+                    this._balancingItemsFlag = !0, window.requestAnimationFrame(this._balancingItems.bind(this))
+                }.bind(this)), t.addEventListener("transitionend", function() {
+                    this._balancingItemsFlag = !1
+                }.bind(this))), this._config.autoplay && (this._$root.addEventListener("mouseenter", function() {
+                    this._autoplay("stop")
+                }.bind(this)), this._$root.addEventListener("mouseleave", function() {
+                    this._config.loop && this._autoplay()
+                }.bind(this))), this._config.swipe) {
+                var n = !1;
+                try {
+                    var r = Object.defineProperty({}, "passive", {
+                        get: function() {
+                            n = !0
+                        }
+                    });
+                    window.addEventListener("testPassiveListener", null, r)
+                } catch (t) {}
+                this._$root.addEventListener("touchstart", i.bind(this), !!n && {
+                    passive: !1
+                }), this._$root.addEventListener("touchmove", e.bind(this), !!n && {
+                    passive: !1
+                }), this._$root.addEventListener("mousedown", i.bind(this)), this._$root.addEventListener("mousemove", e.bind(this)), document.addEventListener("touchend", s.bind(this)), document.addEventListener("mouseup", s.bind(this))
+            }
+            this._$root.addEventListener("dragstart", function(t) {
+                t.preventDefault()
+            }.bind(this)), document.addEventListener("visibilitychange", function() {
+                "hidden" === document.visibilityState ? this._autoplay("stop") : "visible" === document.visibilityState && this._config.loop && this._autoplay()
+            }.bind(this))
+        }, SimpleAdaptiveSlider.prototype.next = function() {
+            this._direction = "next", this._move()
+        }, SimpleAdaptiveSlider.prototype.prev = function() {
+            this._direction = "prev", this._move()
+        }, SimpleAdaptiveSlider.prototype.autoplay = function(t) {
+            this._autoplay("stop")
+        };
+    </script>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="styles/style.css">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var slider = new SimpleAdaptiveSlider('.slider1', {
+                autoplay: true,
+                interval: 5000,
+                swipe: true,
+            });
+            var slider = new SimpleAdaptiveSlider('.slider2', {
+                autoplay: true,
+                interval: 5000,
+                swipe: true,
+            });
+        });
+    </script>
+</head>
+
+<body onload="cp()">
+
+    <div class="content" id="st">
+        <div class="rtt" id="rtt"><a href="#st"> Return to the top </a></div>
+        <!-- HEADER start  -->
+        <div class="header">
+            <div class="header__tl">
+                <div class="header__tl__inner">
+                    <p class="header__tl__inner__cont"><a href="#" target="_blank"> CONTACT SALES </a></p>
+                    <p class="header__tl__inner__cont"><a href="#" target="_blank"> TEL 123-465-7890</a></p>
+                </div>
+            </div>
+
+            <div class="header__bl">
+                <div class="header__l">
+                    <a href="#st"><svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35.0414 35.7752C35.0746 35.7728 35.108 35.7728 35.1412 35.7752H38.4592C38.5245 35.8464 38.5679 35.9349 38.584 36.0302C39.1761 37.8036 39.7715 39.5769 40.3702 41.3502L42.2712 47.0002C42.2712 47.0852 42.3311 47.1652 42.376 47.2802C42.4209 47.1702 42.4558 47.0952 42.4808 47.0202L44.5764 40.8352L46.208 36.0002C46.2379 35.9152 46.2728 35.8302 46.3078 35.7402H49.6258H49.7405C49.7554 35.7648 49.7656 35.7919 49.7705 35.8202C49.7705 40.4302 49.7705 45.0402 49.7705 49.6502C49.7739 49.6801 49.7739 49.7103 49.7705 49.7402C49.7705 49.7402 49.7356 49.7402 49.7206 49.7402H47.5801H47.4753C47.4753 49.6952 47.4753 49.6552 47.4753 49.6202C47.4753 49.5852 47.4753 49.4552 47.4753 49.3702C47.4753 45.8669 47.4753 42.3669 47.4753 38.8702C47.489 38.7607 47.4771 38.6494 47.4404 38.5452C47.2757 38.9452 47.166 39.3252 47.0362 39.6902C46.9065 40.0552 46.7818 40.4402 46.652 40.8152C46.5223 41.1902 46.4026 41.5502 46.2728 41.9152C46.1431 42.2802 46.0184 42.6602 45.8886 43.0352L45.5044 44.1602C45.3747 44.5352 45.25 44.9102 45.1202 45.2802C44.9905 45.6502 44.8658 46.0302 44.7361 46.4052C44.6063 46.7802 44.4866 47.1352 44.3569 47.5052C44.2271 47.8752 44.1024 48.2502 43.9727 48.6252C43.8429 49.0002 43.7182 49.3752 43.5935 49.7402C43.3989 49.7802 41.7274 49.7952 41.2135 49.7402C41.1336 49.6852 41.1236 49.5852 41.0987 49.5052L39.8314 45.9002L37.4464 38.9002C37.4464 38.8252 37.3915 38.7502 37.3566 38.6702C37.2917 38.6702 37.3166 38.7452 37.3166 38.7752C37.3166 38.8052 37.3166 38.9402 37.3166 39.0252V49.4702C37.3166 49.5702 37.3166 49.6652 37.3166 49.7702C37.2833 49.7852 37.248 49.7953 37.2119 49.8002H35.1063H35.0464C35.0319 49.7577 35.0202 49.7143 35.0115 49.6702C35.0115 49.6052 35.0115 49.5402 35.0115 49.4752V36.0952C34.9966 35.9877 35.0068 35.8781 35.0414 35.7752Z" fill="black" />
+                        <path d="M14.0904 42.6603C14.1111 43.9049 13.8429 45.1373 13.3071 46.2603C12.8884 47.1256 12.2847 47.8878 11.5387 48.4927C10.7927 49.0976 9.92293 49.5304 8.99113 49.7603C8.11255 49.9899 7.20022 50.061 6.29679 49.9703C5.43093 49.8971 4.58558 49.6667 3.80202 49.2903C3.00809 48.9023 2.29999 48.3586 1.71974 47.6912C1.13949 47.0238 0.698904 46.2465 0.424118 45.4053C0.10591 44.4713 -0.0378592 43.4865 8.86526e-06 42.5003C0.0177897 41.6229 0.186586 40.7551 0.498961 39.9353C0.886731 38.8353 1.56061 37.8591 2.45095 37.1076C3.34128 36.356 4.41577 35.8563 5.56333 35.6603C6.89373 35.3816 8.27512 35.4767 9.55494 35.9353C10.5094 36.2642 11.375 36.81 12.0839 37.5299C12.7928 38.2499 13.3259 39.1245 13.6414 40.0853C13.872 40.7394 14.0098 41.4227 14.0505 42.1153C14.0705 42.3203 14.0854 42.5453 14.0904 42.6603ZM11.6855 42.6103C11.6813 42.2576 11.6446 41.9061 11.5757 41.5603C11.4739 40.9396 11.2591 40.343 10.942 39.8003C10.6641 39.3078 10.2897 38.8767 9.84123 38.533C9.39278 38.1893 8.87958 37.9401 8.33251 37.8003C7.51462 37.5864 6.65564 37.5864 5.83775 37.8003C4.8765 38.0348 4.02849 38.6013 3.44278 39.4003C3.0451 39.9221 2.7566 40.519 2.59456 41.1553C2.41528 41.8756 2.3596 42.6212 2.42991 43.3603C2.47854 43.9935 2.63374 44.6139 2.88894 45.1953C3.12023 45.7531 3.46646 46.2556 3.90497 46.6701C4.34348 47.0845 4.86439 47.4015 5.4336 47.6003C6.11915 47.8443 6.85168 47.9265 7.5741 47.8403C8.37753 47.7693 9.14548 47.476 9.79219 46.9931C10.4389 46.5101 10.9389 45.8565 11.2364 45.1053C11.553 44.3126 11.7058 43.4638 11.6855 42.6103Z" fill="black" />
+                        <path d="M50 7.15004C50.0215 8.31222 49.7917 9.46528 49.3264 10.53C48.9105 11.4839 48.2734 12.3245 47.4681 12.9819C46.6628 13.6394 45.7125 14.0947 44.6962 14.31C43.3112 14.6512 41.8573 14.5835 40.51 14.115C39.5309 13.7938 38.6416 13.2449 37.9149 12.5132C37.1882 11.7814 36.6446 10.8877 36.3287 9.90504C36.0252 8.9972 35.8883 8.04178 35.9246 7.08504C35.935 6.22524 36.0833 5.3727 36.3637 4.56004C36.7403 3.438 37.4102 2.4376 38.3034 1.66291C39.1967 0.888223 40.2808 0.367545 41.443 0.155044C42.7724 -0.122799 44.1523 -0.0329226 45.4346 0.415044C46.3952 0.73898 47.2673 1.28266 47.9818 2.00299C48.6963 2.72332 49.2335 3.60051 49.551 4.56504C49.7832 5.20858 49.9227 5.88203 49.9651 6.56504C49.9801 6.80004 49.995 7.03004 50 7.15004ZM47.6051 7.27004C47.6051 7.00004 47.5701 6.72504 47.5402 6.45504C47.4762 5.79789 47.2901 5.15855 46.9913 4.57004C46.7364 4.04153 46.3752 3.57151 45.9305 3.18948C45.4857 2.80746 44.967 2.52167 44.4068 2.35004C43.703 2.13325 42.9597 2.07688 42.2313 2.18504C41.1398 2.31857 40.143 2.87271 39.4522 3.73004C38.9475 4.35316 38.6047 5.09181 38.4543 5.88004C38.308 6.5581 38.2709 7.25525 38.3445 7.94504C38.4143 8.62968 38.6088 9.29569 38.9183 9.91004C39.3883 10.9058 40.2254 11.6801 41.2534 12.07C41.9482 12.3337 42.6948 12.4313 43.4338 12.355C44.0921 12.3036 44.731 12.1072 45.3049 11.78C46.1749 11.2608 46.838 10.4549 47.1809 9.50004C47.4558 8.78855 47.5995 8.03297 47.6051 7.27004Z" fill="black" />
+                        <path d="M8.26268 7.99992L8.50218 8.10992C9.16201 8.38786 9.69052 8.90853 9.97908 9.56492C10.1299 9.89413 10.2421 10.2398 10.3134 10.5949C10.5595 11.7349 10.8024 12.8716 11.0418 14.0049C11.0418 14.0949 11.0768 14.1799 11.0917 14.2849C11.051 14.2971 11.0093 14.3055 10.967 14.3099H8.77162H8.70176C8.70176 14.2599 8.65686 14.1999 8.64189 14.1399C8.44231 13.1899 8.24106 12.2399 8.03816 11.2899C7.98826 11.0449 7.91841 10.7899 7.85354 10.5699C7.83884 10.5148 7.81879 10.4612 7.79367 10.4099C7.65361 9.98792 7.39595 9.6149 7.05114 9.33493C6.70633 9.05496 6.28876 8.87972 5.84776 8.82992C5.57821 8.79254 5.30656 8.7725 5.03446 8.76992H2.96381C2.87854 8.75387 2.79035 8.76801 2.71434 8.80992C2.6844 9.06492 2.71434 9.30992 2.71434 9.58992V14.2949C2.67172 14.3062 2.62838 14.3146 2.58461 14.3199H0.444103C0.407577 14.323 0.370858 14.323 0.334333 14.3199V14.1749C0.331834 14.1266 0.331834 14.0782 0.334333 14.0299V0.589918C0.334333 0.489918 0.334333 0.394918 0.334333 0.284918C0.404122 0.280678 0.474104 0.280678 0.543893 0.284918H6.18704C6.84566 0.277725 7.5011 0.377345 8.12797 0.579918C8.49562 0.700865 8.84612 0.868924 9.17078 1.07992C9.89975 1.55136 10.432 2.27317 10.6676 3.10992C10.8921 3.89241 10.8921 4.72243 10.6676 5.50492C10.5362 5.98803 10.3047 6.43802 9.98841 6.82565C9.67207 7.21329 9.2779 7.5299 8.83149 7.75492C8.74667 7.80492 8.65686 7.84492 8.56705 7.88992L8.26268 7.99992ZM2.71434 6.65992H6.34172C6.60492 6.64956 6.86458 6.59549 7.1101 6.49992C7.41438 6.39135 7.6871 6.20895 7.90389 5.96902C8.12068 5.72909 8.2748 5.43909 8.3525 5.12492C8.41737 4.87716 8.43764 4.6198 8.41237 4.36492C8.39377 3.97553 8.26202 3.60007 8.03332 3.28472C7.80461 2.96936 7.48892 2.72787 7.12507 2.58992C6.835 2.47135 6.52524 2.40859 6.21199 2.40492H2.99375C2.90784 2.38934 2.81924 2.39979 2.73928 2.43492C2.70436 2.67992 2.68939 4.93492 2.73928 6.46992C2.69937 6.49992 2.70935 6.56992 2.71434 6.65992Z" fill="black" />
+                    </svg>
+                </a>
+                </div>
+                <div class="header__m">
+                    <ul class="header__m__cont">
+                        <li class="header__m__cont__el"><a href="#pr">PRODUCTS</a></li>
+                        <li class="header__m__cont__el"><a href="#ex">EXPLORE</a></li>
+                        <li class="header__m__cont__el"><a href="#sh">SHOP</a></li>
+                    </ul>
+                </div>
+                <div class="header__r">
+                    <div class="header__r__logo">
+                        <a href="https://www.google.com/maps/place/%D0%9A%D0%B0%D1%84%D0%B5+%22%D0%90%D0%BD%D1%82%D0%B5%D0%B9%D0%BA%D1%83%22/@53.9146365,27.55469,21z/data=!4m9!1m2!2m1!1z0JrQsNGE0LUgItCQ0L3RgtC10LnQutGDIg!3m5!1s0x46dbcf080ace2481:0x3b540c0b4a676aaf!8m2!3d53.9146379!4d27.5547423!15sChnQmtCw0YTQtSAi0JDQvdGC0LXQudC60YMiWhkiF9C60LDRhNC1INCw0L3RgtC10LnQutGDkgELY29mZmVlX3Nob3A"
+                            target="_blank"><svg width="20" height="24" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.989563 9.1163C0.989563 4.0848 5.06298 0 10.0805 0C15.098 0 19.1714 4.0848 19.1714 9.1163C19.1714 12.7874 16.558 16.0916 14.3721 18.8531L10.5032 23.7875C10.2563 24.0381 9.9017 24.0993 9.66314 23.7941C9.24991 23.2667 8.83491 22.7227 8.41726 22.1752C7.55262 21.0419 6.67664 19.8936 5.78164 18.8465L5.78111 18.8459C3.59832 16.0844 0.989563 12.7841 0.989563 9.1163ZM18.1083 9.1163C18.1083 4.66637 14.518 1.06602 10.0805 1.06602C5.64293 1.06602 2.05261 4.66637 2.05261 9.1163C2.05261 12.4164 4.5344 15.5565 6.6107 18.1836L6.61151 18.1846C7.34004 19.1646 8.1177 20.1381 8.89153 21.1069C9.2913 21.6073 9.69005 22.1065 10.0805 22.6046L13.5435 18.1924L13.5451 18.1904C15.623 15.5623 18.1083 12.419 18.1083 9.1163Z" fill="black" />
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.18427 8.88907C6.18427 6.43807 8.12564 4.44434 10.513 4.44434C12.9003 4.44434 14.8423 6.43807 14.8423 8.88907C14.8423 11.3401 12.9003 13.3332 10.513 13.3332C8.12336 13.3332 6.18427 11.3424 6.18427 8.88907ZM13.8309 8.88907C13.8309 7.00454 12.3486 5.48267 10.513 5.48267C8.67796 5.48267 7.19563 7.00513 7.19563 8.88907C7.19563 10.7707 8.68024 12.2949 10.513 12.2949C12.348 12.2949 13.8309 10.7736 13.8309 8.88907Z" fill="black" />
+                            </svg></a>
+
+                    </div>
+                    <div class="header__r__cont"><a href="https://www.google.com/maps/place/%D0%9A%D0%B0%D1%84%D0%B5+%22%D0%90%D0%BD%D1%82%D0%B5%D0%B9%D0%BA%D1%83%22/@53.9146365,27.55469,21z/data=!4m9!1m2!2m1!1z0JrQsNGE0LUgItCQ0L3RgtC10LnQutGDIg!3m5!1s0x46dbcf080ace2481:0x3b540c0b4a676aaf!8m2!3d53.9146379!4d27.5547423!15sChnQmtCw0YTQtSAi0JDQvdGC0LXQudC60YMiWhkiF9C60LDRhNC1INCw0L3RgtC10LnQutGDkgELY29mZmVlX3Nob3A"
+                            target="_blank">SHOWROOMS</a></div>
+                    <div class="header__r__logo" style="margin-left: 45px">
+                        <a href="https://www.google.by/maps/place/%D0%9D%D0%B0%D1%80%D0%BE%D1%87%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9+%D0%9F%D0%B0%D1%80%D0%BA+%22%D0%93%D0%BE%D0%BB%D1%83%D0%B1%D1%8B%D0%B5+%D0%9E%D0%B7%D0%B5%D1%80%D0%B0%22/@54.9587872,26.3612067,21z/data=!4m5!3m4!1s0x46dce29c7fd3201b:0x35cd19b83e78a696!8m2!3d54.958796!4d26.3612739?hl=ru"
+                            target="_blank"><svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.010376 0.729589C0.010376 1.13231 0.279912 1.45918 0.611998 1.45918H2.71255C3.47738 1.45918 4.11995 2.01361 4.36104 2.8956L7.54429 14.4759L5.73317 19.9671C5.57169 20.4546 5.87192 20.956 6.28987 20.9678H19.5375C19.8695 20.9678 20.1391 20.6409 20.1391 20.2381C20.1391 19.8354 19.8695 19.5086 19.5375 19.5086H7.17638L8.58775 15.2296H19.5375C19.8037 15.2296 20.0293 15.02 20.109 14.7297L23.8705 4.4658C24.0502 3.97274 23.7482 3.46037 23.3229 3.44245H5.77412L5.49833 2.43909C5.09459 0.966809 3.992 0 2.71255 0H0.611998C0.279912 0 0.010376 0.326866 0.010376 0.729589ZM8.61334 13.7705L6.17501 4.90162H22.4001L19.1496 13.7705H8.61334Z" fill="#1A1A1A" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.5268 21.7744C8.28172 21.7744 8.89326 22.4968 8.89326 23.3877C8.89326 24.2778 8.28172 25.0002 7.5268 25.0002C6.77188 25.0002 6.16034 24.2778 6.16034 23.3877C6.16034 22.4968 6.77188 21.7744 7.5268 21.7744Z" fill="#1A1A1A" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M18.4585 21.7744C19.2133 21.7744 19.8249 22.4968 19.8249 23.3877C19.8249 24.2778 19.2133 25.0002 18.4585 25.0002C17.7036 25.0002 17.092 24.2778 17.092 23.3877C17.092 22.4968 17.7036 21.7744 18.4585 21.7744Z" fill="#1A1A1A" />
+                        </svg></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- HEADER  end -->
+
+
+        <div class="main">
+            <!-- FIRST IMAGE  start-->
+            <div class="fi">
+                <div class="fi__img">
+                    <img src="src/img/4.jpg" alt="fi" class="fi__img">
+                    <div id="pr"></div>
+                </div>
+                <div class="fi__cont">
+                    <div class="fi__cont__l">Design that inspires a better way to work.</div>
+                    <div class="fi__cont__r">We've developed a series of purpose-built rooms that offer companies looking for change an affordable, sustainable, and flexible alternative to fixed construction and traditional office design.</div>
+                </div>
+            </div>
+            <!-- FIRST IMAGE  end-->
+
+
+            <!-- 4IMGS  start-->
+            <div class="imgs">
+                <div class="imgs__div__l">
+                    <img src="src/img/5.jpg" alt="5.jpg" class="imgs__div__img">
+                    <p class="imgs__div__cont">Phone Booth</p>
+                </div>
+                <div class="imgs__div">
+                    <img src="src/img/6.jpg" alt="6.jpg" class="imgs__div__img">
+                    <p class="imgs__div__cont">Focus Room</p>
+                </div>
+                <div class="imgs__div__l">
+                    <img src="src/img/7.jpg" alt="7.jpg" class="imgs__div__img">
+                    <p class="imgs__div__cont">Meeting Room</p>
+                </div>
+                <div class="imgs__div">
+                    <img src="src/img/8.jpg" alt="8.jpg" class="imgs__div__img">
+                    <p class="imgs__div__cont">Open Meeting Room</p>
+                </div>
+            </div>
+            <!-- 4IMGS  end-->
+
+
+            <!-- BRANDS  start-->
+            <div id="ex"></div>
+            <div class="brands">
+                <div class="brands__cont">
+                    <div class="brands__cont__t">The world's leading brands choose ROOM.</div>
+                    <div class="brands__cont__b">Over 3,000 and counting.</div>
+                </div>
+                <div class="brands__imgs">
+                    <div class="brands__imgs__gr gr1">
+                        <img src="src/img/logo1.png" alt="logo">
+                        <img src="src/img/logo2.png" alt="logo">
+                        <img src="src/img/logo3.png" alt="logo">
+                        <img src="src/img/logo4.png" alt="logo">
+                        <img src="src/img/logo5.png" alt="logo">
+                        <img src="src/img/logo6.png" alt="logo">
+                    </div>
+                    <div class="brands__imgs__gr gr2">
+                        <img src="src/img/logo7.png" alt="logo">
+                        <img src="src/img/logo8.png" alt="logo">
+                        <img src="src/img/logo9.png" alt="logo">
+                        <img src="src/img/logo10.png" alt="logo">
+                        <img src="src/img/logo11.png" alt="logo">
+                        <img src="src/img/logo12.png" alt="logo">
+                    </div>
+                    <div class="brands__imgs__gr gr3">
+                        <img src="src/img/logo13.png" alt="logo">
+                        <img src="src/img/logo14.png" alt="logo">
+                        <img src="src/img/logo15.png" alt="logo">
+                        <img src="src/img/logo16.png" alt="logo">
+                        <img src="src/img/logo17.png" alt="logo">
+                        <img src="src/img/logo18.png" alt="logo">
+                    </div>
+                </div>
+            </div>
+            <!-- BRANDS  end-->
+
+            <!-- |!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!| -->
+            <!-- SLIDER 1  start-->
+            <div class="slider slider1">
+                <div class="slider__wrapper">
+                    <div class="slider__items">
+                        <div class="slider__item">
+                            <img src="src/img/slider1.jpg" width="1344px" height="700px">
+                        </div>
+                        <div class="slider__item">
+                            <img src="src/img/slider2.jpg" width="1344px" height="700px">
+                        </div>
+                        <div class="slider__item">
+                            <img src="src/img/slider3.jpg" width="1344px" height="700px">
+                        </div>
+                        <div class="slider__item">
+                            <img src="src/img/slider4.jpg" width="1344px" height="700px">
+                        </div>
+                        <div class="slider__item">
+                            <img src="src/img/slider5.jpg" width="1344px" height="700px">
+                        </div>
+                    </div>
+                </div>
+                <a class="slider__control slider__control_prev" href="#" role="button" data-slide="prev"></a>
+                <a class="slider__control slider__control_next" href="#" role="button" data-slide="next"></a>
+            </div>
+            <!-- SLIDER 1  end-->
+            <!-- |!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!| -->
+
+
+            <!-- ADVANTAGES 1  start-->
+            <div class="advantages">
+                <div class="advantages__cont">
+                    <div class="advantages__cont__t">Our simple and seamless modular products allow teams to shape and then reshape their work environment with ease.</div>
+                    <div class="advantages__cont__b">GET IN TOUCH</div>
+                </div>
+
+                <div class="advantages__els">
+                    <div class="advantages__els__el">
+                        <div class="advantages__els__el__img">
+                            <svg width="162" height="121" viewBox="0 0 162 121" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <path d="M143.093 0H18.0577C13.2357 0.0329722 8.63214 1.16369 5.25207 3.14532C1.87199 5.12696 -0.0101012 7.79853 0.0166864 10.5768V19.9325H8.19441V10.6057C8.19409 9.09047 9.22843 7.63601 11.074 6.55654C12.9195 5.47707 15.428 4.85921 18.0577 4.83648H143.093C145.725 4.85671 148.238 5.47347 150.087 6.55321C151.937 7.63294 152.973 9.08884 152.973 10.6057V89.9703H8.1777V74.8071H0V94.7782H161.117V10.6153C161.162 7.83199 159.29 5.15199 155.911 3.16231C152.533 1.17263 147.924 0.0355011 143.093 0Z" fill="#AAAAAA" />
+                                    <path d="M8.19434 27.712H0.0166016V67.0674H8.19434V27.712Z" fill="#AAAAAA" />
+                                    <path d="M34.0289 116.193H28.0875V98.3468H19.9099V121.001H39.7032L54.106 98.3468L45.3775 98.3661L34.0289 116.193Z" fill="#AAAAAA" />
+                                    <path d="M133.046 116.193H127.105L115.756 98.3468H107.028L121.431 121.001H141.224V98.3468H133.063L133.046 116.193Z" fill="#AAAAAA" />
+                                    <path d="M56.6265 47.3938C56.7251 50.1099 58.213 52.7488 60.9037 54.9794C63.5945 57.2103 67.368 58.9338 71.7524 59.934C76.1361 60.9345 80.9346 61.1667 85.547 60.6021C90.1595 60.0376 94.3793 58.7013 97.6789 56.7607C100.978 54.8198 103.21 52.3613 104.094 49.6928C104.979 47.0248 104.476 44.2652 102.65 41.7609C100.823 39.2562 97.754 37.1181 93.8272 35.6144C89.9003 34.1106 85.2904 33.3081 80.5756 33.3075C74.1617 33.3532 68.04 34.8611 63.5517 37.5012C59.0631 40.1414 56.573 43.6984 56.6265 47.3938ZM78.1222 36.2883V45.4707H83.0289V36.2883C87.826 36.6473 92.2065 38.0447 95.28 40.197C98.3534 42.3493 99.8905 45.0948 99.5782 47.8759C99.2658 50.6574 97.1281 53.2661 93.5984 55.1722C90.0694 57.0784 85.4129 58.139 80.5756 58.139C75.7376 58.139 71.0817 57.0784 67.5521 55.1722C64.023 53.2661 61.8851 50.6574 61.5728 47.8759C61.2606 45.0948 62.7973 42.3493 65.8711 40.197C68.9446 38.0447 73.3251 36.6473 78.1222 36.2883Z" fill="#AAAAAA" />
+                                    <path d="M83.0289 23.7019H78.1223V29.2018H83.0289V23.7019Z" fill="#AAAAAA" />
+                                    <path d="M69.1099 24.6357L64.5034 25.6165L67.6907 30.7895L72.2974 29.7992L69.1099 24.6357Z" fill="#AAAAAA" />
+                                    <path d="M52.8042 30.1638L58.829 34.3849L62.5841 32.5291L56.576 28.3176L52.8042 30.1638Z" fill="#AAAAAA" />
+                                    <path d="M44.4765 36.789L52.5707 39.539L55.024 37.0486L46.9297 34.2986L44.4765 36.789Z" fill="#AAAAAA" />
+                                    <path d="M40.4882 44.6925L49.7005 45.6541L50.5517 42.808L41.3393 41.8558L40.4882 44.6925Z" fill="#AAAAAA" />
+                                    <path d="M40.4882 50.0868L41.3393 52.9231L50.5517 51.9714L49.7005 49.1252L40.4882 50.0868Z" fill="#AAAAAA" />
+                                    <path d="M55.024 57.7309L52.5707 55.2406L44.4765 57.9907L46.9131 60.481L55.024 57.7309Z" fill="#AAAAAA" />
+                                    <path d="M62.5674 62.2499L58.8124 60.4039L52.8042 64.6155L56.5593 66.4713L62.5674 62.2499Z" fill="#AAAAAA" />
+                                    <path d="M69.1098 70.145L72.2973 64.9817L67.6914 63.991L64.4868 69.1641L69.1098 70.145Z" fill="#AAAAAA" />
+                                    <path d="M83.0289 65.5862H78.1223V71.086H83.0289V65.5862Z" fill="#AAAAAA" />
+                                    <path d="M92.0406 70.145L96.6473 69.1641L93.4591 63.991L88.8531 64.9817L92.0406 70.145Z" fill="#AAAAAA" />
+                                    <path d="M98.566 62.2598L104.591 66.4713L108.346 64.6155L102.321 60.4039L98.566 62.2598Z" fill="#AAAAAA" />
+                                    <path d="M116.674 57.9907L108.58 55.2406L106.127 57.7408L114.221 60.4905L116.674 57.9907Z" fill="#AAAAAA" />
+                                    <path d="M120.663 50.087L111.45 49.1353L110.599 51.9716L119.811 52.9237L120.663 50.087Z" fill="#AAAAAA" />
+                                    <path d="M119.811 41.8558L110.599 42.8174L111.45 45.6541L120.663 44.702L119.811 41.8558Z" fill="#AAAAAA" />
+                                    <path d="M106.127 37.0486L108.58 39.5485L116.691 36.7986L114.238 34.2986L106.127 37.0486Z" fill="#AAAAAA" />
+                                    <path d="M98.5828 32.5291L102.338 34.3849L108.346 30.1734L104.591 28.3176L98.5828 32.5291Z" fill="#AAAAAA" />
+                                    <path d="M92.0575 24.6357L88.8531 29.8088L93.4591 30.7895L96.6635 25.6261L92.0575 24.6357Z" fill="#AAAAAA" />
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0">
+                                        <rect width="162" height="121" fill="white" />
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="advantages__els__el__cont">
+                            <div class="advantages__els__el__cont__t">Cost-effective</div>
+                            <div class="advantages__els__el__cont__b">At a fraction of the cost of traditional construction, our pre-fab solutions create additional space for focused work and collaboration without constant noise, debris and distraction.</div>
+                        </div>
+                    </div>
+                    <div class="cont24">40404040404040404040404040</div>
+                    <div class="advantages__els__el">
+                        <div class="advantages__els__el__img">
+                            <svg width="162" height="121" viewBox="0 0 162 121" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <path d="M133.191 25.6543L145.334 15.5904L139.85 12.5072L127.664 22.5712C114.905 15.9762 99.4127 12.1738 83.3004 11.6831V4.84775H96.7486V0H62.8018V4.84775H76.25V11.6831C33.8744 12.9726 1.6787e-05 36.8623 1.6787e-05 66.0845C-0.009194 75.7551 3.77213 85.2589 10.9675 93.6491L17.0895 91.1958C10.537 83.552 7.09571 74.8941 7.10856 66.0845C7.10856 38.7238 39.7354 16.4727 79.8191 16.4727C119.902 16.4727 152.529 38.7722 152.529 66.0944C152.529 93.4162 119.873 115.745 79.79 115.745C64.8201 115.73 50.2317 112.588 38.067 106.757H53.4592V101.91H25.6198V121H32.7284V110.063C46.3107 116.867 62.8158 120.56 79.79 120.593C123.79 120.593 159.579 96.1602 159.579 66.1329C159.618 58.5322 157.292 51.0091 152.749 44.0406C148.207 37.0724 141.546 30.8112 133.191 25.6543Z" fill="#AAAAAA" />
+                                    <path d="M83.3004 66.085H83.344V25.9164H76.2355V63.6612H31.3938V68.5088H83.3004V66.085Z" fill="#AAAAAA" />
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0">
+                                        <rect width="162" height="121" fill="white" />
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="advantages__els__el__cont">
+                            <div class="advantages__els__el__cont__t">Time Saving</div>
+                            <div class="advantages__els__el__cont__b">Thoughtful design ensures simple installation in a few hours or less. And, because our products are safety ensured, you'll never have to spend time or money chasing after permits, contractors, and more.</div>
+                        </div>
+                    </div>
+                    <div class="cont24">40404040404040404040404040</div>
+                    <div class="advantages__els__el">
+                        <div class="advantages__els__el__img">
+                            <svg width="162" height="121" viewBox="0 0 162 121" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <path d="M161.998 40.8595L162 20.8947L130.45 20.7932L130.433 25.1746L149.409 25.2359L115.602 41.0241L115.604 19.0191C115.604 19.0172 115.604 19.0172 115.604 19.0153C115.602 18.2413 115.142 17.5248 114.389 17.132L82.1595 0.303422C81.3807 -0.102733 80.416 -0.100816 79.6412 0.307255L47.6154 17.1339C46.865 17.5286 46.4041 18.2432 46.4041 19.0172L46.4021 41.0241L13.3096 25.2264L31.5757 25.1708L31.5584 20.7893L4.19062 20.8736L3.65625 20.6188L3.49832 20.8775L0.00865238 20.889L0.00649013 40.8558H4.95432L4.95647 26.2188L46.3996 45.9998L46.3976 73.3443L44.2276 74.3578L46.3976 77.9977V77.9995L44.2276 74.3578L4.94784 92.7018L4.94999 78.4593H0.00216227L0 98.4262L31.5497 98.5277L31.5671 94.1461L12.5935 94.0848L46.3956 78.2984L46.3932 100.302C46.3932 101.078 46.8561 101.794 47.6114 102.189L79.8405 119.017C80.2277 119.221 80.6626 119.322 81.0972 119.322C81.5342 119.322 81.9716 119.219 82.3588 119.016L114.382 102.191C115.133 101.796 115.594 101.082 115.594 100.308L115.596 79.0379L149.586 95.2651L130.422 95.3245L130.44 99.7058L161.989 99.6083L161.992 79.6415H157.044L157.041 93.8472L117.783 75.1069L115.594 74.0608L115.596 45.9804L157.048 26.6211L157.046 40.8632H161.998V40.8595ZM80.9048 4.73473L108.27 19.0249L81.1017 33.2977L53.7338 19.0095L80.9048 4.73473ZM51.3455 75.9862L65.4492 69.3994L60.2891 66.8573L51.3475 71.0336L51.352 22.8488L78.6352 37.0931L78.6287 113.295L51.3455 99.0488V75.9862ZM110.652 76.6718L110.65 99.0565L83.5722 113.284L83.5786 37.0909L110.657 22.8661L110.652 71.6965L100.348 66.7766L95.5646 69.4705L110.652 76.6718Z" fill="#AAAAAA" />
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0">
+                                        <rect width="162" height="121" fill="white" />
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="advantages__els__el__cont">
+                            <div class="advantages__els__el__cont__t">Flexible</div>
+                            <div class="advantages__els__el__cont__b">Unlike traditional construction, our purpose-built products were designed to adapt with your workspace and can easily be positioned in various places throughout your office, or to an entirely new location.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ADVANTAGES 1  end-->
+
+
+            <!-- REVIEWS  start-->
+            <div class="reviews">
+                <div class="reviews__cont">
+                    <div class="reviews__cont__els">
+                        <div class="reviews__cont__els__el">
+                            <div class="stars">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                            </div>
+                            <div class="reviews__cont__els__el__review">"We can now have meetings in peace."</div>
+                            <div class="reviews__cont__els__el__comp">
+                                <img src="src/img/review1.png" alt="logo">
+                            </div>
+                        </div>
+                        <div class="reviews__cont__els__el">
+                            <div class="stars">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                            </div>
+                            <div class="reviews__cont__els__el__review">"Amazing private space to get work done."</div>
+                            <div class="reviews__cont__els__el__comp">
+                                <img src="src/img/review2.png" alt="logo">
+                            </div>
+                        </div>
+                        <div class="reviews__cont__els__el">
+                            <div class="stars">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                                <img src="src/img/star.png" alt="st">
+                            </div>
+                            <div class="reviews__cont__els__el__review">"Our booths are in constant use."</div>
+                            <div class="reviews__cont__els__el__comp">
+                                <img src="src/img/review3.png" alt="logo">
+                            </div>
+                        </div>
+                        <div class="rmr">
+                            <a href="reviews.html">READ MORE REVIEWS</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- REVIEWS  end-->
+
+
+            <!-- ADVANTAGES 2  start-->
+            <div class="advantages2">
+                <div class="advantages2__cont">
+                    <div class="advantages2__cont__t">We take a human approach to a business-to-business industry, breaking the boundaries between corporate and personal, and rethinking every step of the user experience along the way.</div>
+                    <div class="advantages2__cont__b">We make work, work for you.</div>
+                </div>
+
+                <div class="advantages2__plits">
+                    <div class="advantages2__plits__plit">
+                        <div class="advantages2__plits__plit__b">
+                            <img src="src/img/advantage1.jpg" alt="advantages">
+                        </div>
+                        <div class="advantages2__plits__plit__s">
+                            <div class="advantages2__plits__plit__s__cont">
+                                <div class="advantages2__plits__plit__s__cont__t">We sell direct.</div>
+                                <div class="advantages2__plits__plit__s__cont__b">We make extra room in the budget without compromising quality by selling direct. No middle man, and no additional construction required.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h64">646464646464646464646464</div>
+                    <div class="advantages2__plits__plit">
+                        <div class="advantages2__plits__plit__s">
+                            <div class="advantages2__plits__plit__s__cont">
+                                <div class="advantages2__plits__plit__s__cont__t">We build with purpose.</div>
+                                <div class="advantages2__plits__plit__s__cont__b">We’re not just building another room with four walls, we’re building a more productive workspace. We design with you in mind, looking at every detail as an opportunity to enable a better working environment for everyone.</div>
+                            </div>
+                        </div>
+                        <div class="advantages2__plits__plit__b">
+                            <img src="src/img/advantage2.jpg" alt="advantages">
+                        </div>
+                    </div>
+                    <div class="h64">646464646464646464646464</div>
+                    <div class="advantages2__plits__plit">
+                        <div class="advantages2__plits__plit__b">
+                            <img src="src/img/advantage3.jpg" alt="advantages">
+                        </div>
+                        <div class="advantages2__plits__plit__s">
+                            <div class="advantages2__plits__plit__s__cont">
+                                <div class="advantages2__plits__plit__s__cont__t">We design sustainably.</div>
+                                <div class="advantages2__plits__plit__s__cont__b">From design to delivery, we strive to lessen our impact on the environment. Our products are engineered with recycled materials and replace multiple cycles of construction, minimizing noise and our footprint.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ADVANTAGES 2  end-->
+
+
+            <!-- SLIDER 2  start-->
+            <div class="slider slider2">
+                <div class="slider__wrapper">
+                    <div class="slider__items">
+                        <div class="slider__item">
+                            <img src="src/img/slider2-1.jpg" width="1344px" height="700px">
+                        </div>
+                        <div class="slider__item">
+                            <img src="src/img/slider2-2.jpg" width="1344px" height="700px">
+                        </div>
+                        <div class="slider__item">
+                            <img src="src/img/slider2-3.jpg" width="1344px" height="700px">
+                        </div>
+                    </div>
+                </div>
+                <a class="slider__control slider__control_prev" href="#" role="button" data-slide="prev"></a>
+                <a class="slider__control slider__control_next" href="#" role="button" data-slide="next"></a>
+            </div>
+            <!-- SLIDER 2  end-->
+
+
+            <!-- RISK-FREE start -->
+            <div id="sh"></div>
+            <div class="rf">
+                <div class="rf__inner">
+                    <div class="rf__inner__t">100 day risk-free trial</div>
+                    <div class="rf__inner__m">
+                        <div class="rf__inner__m__inner">
+                            <div class="rf__inner__m__inner__el">
+                                <div class="rf__inner__m__inner__el__t">
+                                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M44.1391 27.9452L46.2043 31.6111L47.2219 31.0138L45.1369 27.3124L46.4642 27.6631L46.7581 26.5033L43.511 25.6445L42.668 28.966L43.8041 29.2662L44.1391 27.9452Z" fill="#AAAAAA" />
+                                        <path d="M39.3925 30.7753L41.4577 34.4411L42.4753 33.8439L40.3895 30.1424L41.7168 30.4932L42.0115 29.3334L38.7636 28.4746L37.9214 31.796L39.0575 32.0962L39.3925 30.7753Z" fill="#AAAAAA" />
+                                        <path d="M41.6575 37.5101L49.9334 32.5627L49.34 31.5293L41.0649 36.4759L41.6575 37.5101Z" fill="#AAAAAA" />
+                                        <path d="M44.5129 43.4924L58.6764 34.7852L39.3451 2L20.8838 13.35L38.2888 42.8691C34.1394 43.9791 31.2257 48.0021 31.5765 52.5181C31.951 57.3406 35.9147 61.012 40.5737 61.012C40.8123 61.012 41.0533 61.0026 41.2958 60.9828C46.2606 60.5799 49.9794 56.1279 49.5851 51.0589C49.3236 47.6821 47.3011 44.875 44.5129 43.4924ZM38.6783 4.74151L55.9917 34.1041L42.0298 42.6874C41.4973 42.5989 40.9513 42.557 40.3951 42.5689L23.5684 14.0311L38.6783 4.74151ZM41.141 58.9919C37.2491 59.3095 33.8353 56.3325 33.5263 52.3601C33.2174 48.3885 36.1312 44.9003 40.0206 44.5851C40.2118 44.5693 40.403 44.5614 40.5927 44.5614C42.2723 44.5614 43.8809 45.165 45.1734 46.2908C46.6113 47.5431 47.4859 49.2931 47.6353 51.2169C47.9442 55.1885 45.0312 58.6758 41.141 58.9919Z" fill="#AAAAAA" />
+                                        <path d="M40.4283 49.8269C39.3689 49.913 38.5756 50.8627 38.6594 51.9443C38.7392 52.9729 39.5853 53.7567 40.58 53.7567C40.6306 53.7567 40.6819 53.7551 40.7333 53.7503C41.7928 53.6642 42.586 52.7146 42.5022 51.633C42.4185 50.5514 41.4839 49.7384 40.4283 49.8269ZM40.6409 52.5566C40.23 52.5937 39.8626 52.2729 39.8295 51.8495C39.7963 51.4268 40.1068 51.0554 40.5216 51.0215C40.5413 51.0199 40.5619 51.0191 40.5816 51.0191C40.9703 51.0191 41.3013 51.3256 41.333 51.7286C41.3653 52.1513 41.0549 52.5226 40.6409 52.5566Z" fill="#AAAAAA" />
+                                        <path d="M33.7184 43.5567L34.3457 43.0107L13.0188 6.35109C11.9672 4.54422 10.1145 3.38047 8.06192 3.23668L3.13431 2.89062L3 4.88317L7.9284 5.22921C9.34024 5.32797 10.6146 6.12909 11.3375 7.37185L31.8372 42.6086C29.1803 45.2537 27.785 49.0026 28.0805 52.8012L30.0304 52.6432C29.7618 49.1985 31.1412 45.802 33.7184 43.5567Z" fill="#AAAAAA" />
+                                        <path d="M60.4486 37.9316L49.1333 44.8257L50.2686 46.4595L61.4504 39.6469L60.4486 37.9316Z" fill="#AAAAAA" />
+                                    </svg>
+                                </div>
+                                <div class="rf__inner__m__inner__el__b">FREE SHIPPING</div>
+                            </div>
+                            <div class="rf__inner__m__inner__el">
+                                <div class="rf__inner__m__inner__el__t">
+                                    <svg width="64" height="51" viewBox="0 0 64 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g>
+                                            <path d="M63.8504 26.8125C63.8557 26.0136 63.4571 25.2913 62.7827 24.8799L62.3756 24.6315C63.0655 22.6784 64.4701 15.9868 55.4983 7.83458C50.6864 3.46142 43.3661 0.828814 34.888 0.421631C27.2206 0.0503009 19.2746 1.51001 13.0761 4.41748C5.33415 8.04884 0.329389 14.0046 0.015735 19.9604C-0.182228 23.7224 1.39548 29.3085 10.0356 34.5652C15.0703 37.628 20.9998 38.7762 26.631 38.7762C30.358 38.7762 33.9522 38.2734 37.0681 37.4897L37.0664 38.1385L33.2854 40.3306C32.185 40.9769 31.3255 42.4904 31.3298 43.7768C31.3315 44.5049 31.6169 45.0888 32.1105 45.3774C32.3282 45.5045 32.5732 45.5677 32.8338 45.5677C33.1681 45.5677 33.5254 45.4636 33.8759 45.2569L37.1872 43.3372C37.2781 43.6009 37.4135 43.845 37.5892 44.0602C36.8959 44.8174 36.422 45.8963 36.4246 46.8507C36.4262 47.5788 36.7116 48.1619 37.2053 48.4513C37.4229 48.5793 37.668 48.6417 37.9286 48.6417C38.2627 48.6417 38.6193 48.5375 38.9706 48.3317L41.7198 46.738L47.5627 50.2986C47.9312 50.5239 48.3383 50.6366 48.7462 50.6366C49.1336 50.6366 49.5217 50.5349 49.8783 50.3302C49.9811 50.2712 50.0763 50.2037 50.167 50.132L62.1057 42.1498C63.1872 41.495 63.8548 40.2974 63.8513 39.0169L63.8136 27.1975C63.8342 27.0712 63.8496 26.944 63.8504 26.8125ZM50.0797 33.8977C49.8877 33.7031 49.6743 33.528 49.4369 33.3838L41.3076 28.4311L51.8151 22.1141C52.6454 21.6199 53.6747 21.625 54.4999 22.1295L61.7843 26.5735C61.888 26.6366 61.9094 26.7306 61.9086 26.7989C61.9086 26.8671 61.8854 26.9602 61.7834 27.0208L50.0797 33.8977ZM11.0322 32.869C4.85082 29.1088 1.71255 24.681 1.95508 20.0654C2.22932 14.8429 6.80302 9.53502 13.8894 6.21096C25.6463 0.697356 44.6507 0.625649 54.2051 9.3071C61.816 16.2232 61.2066 21.6976 60.6702 23.5901L55.4992 20.435C54.6337 19.9066 53.6396 19.6992 52.6694 19.8025C50.8878 14.3247 44.5076 8.54566 33.9925 7.68775C30.3135 7.38727 26.3816 7.7219 22.3067 8.68138C19.1161 9.43258 17.3738 10.322 15.4413 11.6034L16.5024 13.2577C18.2943 12.0695 19.8197 11.2944 22.7445 10.6055C26.6241 9.69208 30.3554 9.37283 33.8373 9.65708C43.4612 10.4416 49.2493 15.5693 50.8227 20.4145L38.4007 27.8821C38.3527 27.9052 38.3048 27.9257 38.2576 27.9521C37.5274 28.3712 37.0904 29.131 37.0878 29.9838L37.0732 35.4496C29.6073 37.4334 19.0638 37.7544 11.0322 32.869ZM33.2949 44.2283C33.0455 44.3743 32.8141 44.4204 32.6907 44.3487C32.5698 44.2778 32.4945 44.0568 32.4936 43.7717C32.491 42.9001 33.12 41.793 33.8639 41.3567L40.9931 37.2242L41 39.7613L33.2949 44.2283ZM38.3896 47.304C38.1403 47.4499 37.908 47.496 37.7854 47.4243C37.6646 47.3535 37.5892 47.1324 37.5883 46.8481C37.5857 45.9766 38.2148 44.8694 38.9587 44.4332L46.0879 40.2999L46.0947 42.8369L38.3896 47.304ZM43.6558 45.6155L46.9679 43.6957C47.1497 43.5898 47.2627 43.3926 47.2619 43.1793L47.2516 39.2798C47.2508 39.069 47.1402 38.8744 46.9611 38.7686C46.782 38.6626 46.5609 38.6618 46.3801 38.7668L39.2243 42.9154L39.1703 42.883C39.0624 42.8173 38.9955 42.6969 38.9955 42.5655V42.2897L41.8732 40.6217C42.0549 40.5159 42.168 40.3187 42.1671 40.1053L42.1569 36.2059C42.156 35.995 42.0454 35.8005 41.8663 35.6945C41.6872 35.5887 41.4662 35.5879 41.2853 35.6929L39.0109 37.0109L39.0298 29.9915C39.0298 29.8062 39.1446 29.7132 39.2123 29.6739C39.28 29.6347 39.4171 29.5835 39.5748 29.6791L48.4377 35.0782C48.8713 35.3429 49.1396 35.8269 49.1387 36.3408L49.1052 48.2916C49.1052 48.4154 49.0538 48.4949 48.9999 48.5477L48.8756 48.6305C48.8011 48.6613 48.688 48.6818 48.5602 48.6041L43.6558 45.6155ZM61.1004 40.4578L51.0515 47.1759L51.0815 36.3459C51.0823 36.1043 51.0515 35.8678 51.0035 35.6366L61.8769 29.2479L61.9077 39.022C61.9094 39.611 61.6 40.1608 61.1004 40.4578Z" fill="#AAAAAA" />
+                                        </g>
+                                        <defs>
+                                            <clipPath id="clip0">
+                                                <rect width="64" height="51" fill="white" />
+                                            </clipPath>
+                                        </defs>
+                                    </svg>
+                                </div>
+                                <div class="rf__inner__m__inner__el__b">PLUG & PLAY</div>
+                            </div>
+                            <div class="rf__inner__m__inner__el">
+                                <div class="rf__inner__m__inner__el__t">
+                                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M47.8541 26.3236L41.1361 26.3227L5.07482 26.32C3.3545 26.32 1.95455 24.8905 1.95455 23.1334C1.95455 21.3762 3.3545 19.9467 5.07572 19.9467L45.5837 19.9494V17.9553L5.07572 17.9526C2.27851 17.9526 0.0026926 20.276 0.00179519 23.1325L0 58.8151C0 60.3927 1.25637 61.676 2.8017 61.676L47.8532 61.6796C49.3985 61.6796 50.6549 60.3963 50.6549 58.8196L50.6567 38.024L50.6576 29.1837C50.6558 27.6069 49.3994 26.3236 47.8541 26.3236ZM48.7013 58.8196C48.7013 59.297 48.3199 59.6865 47.8523 59.6865L2.8008 59.6829C2.33325 59.6829 1.95186 59.2934 1.95186 58.816L1.95365 27.2085C2.58363 27.7128 3.33117 28.0673 4.1478 28.2225V28.3132H5.07393L41.1352 28.3159L47.8532 28.3168C48.3217 28.3168 48.7022 28.7062 48.7022 29.1837L48.7013 38.024V58.8196Z" fill="#AAAAAA" />
+                                        <path d="M47.6817 22.1577H6.50693V23.3539H47.6817V22.1577Z" fill="#AAAAAA" />
+                                        <path d="M59.1445 8.37426C53.0143 2.11397 43.247 1.78372 36.7282 7.37635L37.3752 2.25486L35.4386 2L34.3483 10.6357L42.8054 11.7485L43.0549 9.77152L37.7845 9.07783C43.535 3.96352 52.2919 4.19595 57.7643 9.78409C63.4771 15.619 63.4762 25.1118 57.7625 30.9458L59.1427 32.3556C65.6183 25.7444 65.6192 14.9863 59.1445 8.37426Z" fill="#AAAAAA" />
+                                    </svg>
+                                </div>
+                                <div class="rf__inner__m__inner__el__b">FREE RETURNS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rf__inner__b">
+                        <a href="purp.php"><button class="rf__inner__b__btn">GET A ROOM</button></a>
+                    </div>
+                    <div class="rf__inner__ub">
+                        <a href="tnc.html"> Terms & Conditions apply </a> </div>
+                </div>
+            </div>
+            <!-- RISK-FREE end -->
+
+
+            <!-- BOT start -->
+            <div class="bot">
+                <div class="bot__inner">
+                    <div class="bot__inner__col1">
+                        <a href="#st"><svg width="90" height="90" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M35.0414 35.7752C35.0746 35.7728 35.108 35.7728 35.1412 35.7752H38.4592C38.5245 35.8464 38.5679 35.9349 38.584 36.0302C39.1761 37.8036 39.7715 39.5769 40.3702 41.3502L42.2712 47.0002C42.2712 47.0852 42.3311 47.1652 42.376 47.2802C42.4209 47.1702 42.4558 47.0952 42.4808 47.0202L44.5764 40.8352L46.208 36.0002C46.2379 35.9152 46.2728 35.8302 46.3078 35.7402H49.6258H49.7405C49.7554 35.7648 49.7656 35.7919 49.7705 35.8202C49.7705 40.4302 49.7705 45.0402 49.7705 49.6502C49.7739 49.6801 49.7739 49.7103 49.7705 49.7402C49.7705 49.7402 49.7356 49.7402 49.7206 49.7402H47.5801H47.4753C47.4753 49.6952 47.4753 49.6552 47.4753 49.6202C47.4753 49.5852 47.4753 49.4552 47.4753 49.3702C47.4753 45.8669 47.4753 42.3669 47.4753 38.8702C47.489 38.7607 47.4771 38.6494 47.4404 38.5452C47.2757 38.9452 47.166 39.3252 47.0362 39.6902C46.9065 40.0552 46.7818 40.4402 46.652 40.8152C46.5223 41.1902 46.4026 41.5502 46.2728 41.9152C46.1431 42.2802 46.0184 42.6602 45.8886 43.0352L45.5044 44.1602C45.3747 44.5352 45.25 44.9102 45.1202 45.2802C44.9905 45.6502 44.8658 46.0302 44.7361 46.4052C44.6063 46.7802 44.4866 47.1352 44.3569 47.5052C44.2271 47.8752 44.1024 48.2502 43.9727 48.6252C43.8429 49.0002 43.7182 49.3752 43.5935 49.7402C43.3989 49.7802 41.7274 49.7952 41.2135 49.7402C41.1336 49.6852 41.1236 49.5852 41.0987 49.5052L39.8314 45.9002L37.4464 38.9002C37.4464 38.8252 37.3915 38.7502 37.3566 38.6702C37.2917 38.6702 37.3166 38.7452 37.3166 38.7752C37.3166 38.8052 37.3166 38.9402 37.3166 39.0252V49.4702C37.3166 49.5702 37.3166 49.6652 37.3166 49.7702C37.2833 49.7852 37.248 49.7953 37.2119 49.8002H35.1063H35.0464C35.0319 49.7577 35.0202 49.7143 35.0115 49.6702C35.0115 49.6052 35.0115 49.5402 35.0115 49.4752V36.0952C34.9966 35.9877 35.0068 35.8781 35.0414 35.7752Z" fill="#fff" />
+                            <path d="M14.0904 42.6603C14.1111 43.9049 13.8429 45.1373 13.3071 46.2603C12.8884 47.1256 12.2847 47.8878 11.5387 48.4927C10.7927 49.0976 9.92293 49.5304 8.99113 49.7603C8.11255 49.9899 7.20022 50.061 6.29679 49.9703C5.43093 49.8971 4.58558 49.6667 3.80202 49.2903C3.00809 48.9023 2.29999 48.3586 1.71974 47.6912C1.13949 47.0238 0.698904 46.2465 0.424118 45.4053C0.10591 44.4713 -0.0378592 43.4865 8.86526e-06 42.5003C0.0177897 41.6229 0.186586 40.7551 0.498961 39.9353C0.886731 38.8353 1.56061 37.8591 2.45095 37.1076C3.34128 36.356 4.41577 35.8563 5.56333 35.6603C6.89373 35.3816 8.27512 35.4767 9.55494 35.9353C10.5094 36.2642 11.375 36.81 12.0839 37.5299C12.7928 38.2499 13.3259 39.1245 13.6414 40.0853C13.872 40.7394 14.0098 41.4227 14.0505 42.1153C14.0705 42.3203 14.0854 42.5453 14.0904 42.6603ZM11.6855 42.6103C11.6813 42.2576 11.6446 41.9061 11.5757 41.5603C11.4739 40.9396 11.2591 40.343 10.942 39.8003C10.6641 39.3078 10.2897 38.8767 9.84123 38.533C9.39278 38.1893 8.87958 37.9401 8.33251 37.8003C7.51462 37.5864 6.65564 37.5864 5.83775 37.8003C4.8765 38.0348 4.02849 38.6013 3.44278 39.4003C3.0451 39.9221 2.7566 40.519 2.59456 41.1553C2.41528 41.8756 2.3596 42.6212 2.42991 43.3603C2.47854 43.9935 2.63374 44.6139 2.88894 45.1953C3.12023 45.7531 3.46646 46.2556 3.90497 46.6701C4.34348 47.0845 4.86439 47.4015 5.4336 47.6003C6.11915 47.8443 6.85168 47.9265 7.5741 47.8403C8.37753 47.7693 9.14548 47.476 9.79219 46.9931C10.4389 46.5101 10.9389 45.8565 11.2364 45.1053C11.553 44.3126 11.7058 43.4638 11.6855 42.6103Z" fill="#fff" />
+                            <path d="M50 7.15004C50.0215 8.31222 49.7917 9.46528 49.3264 10.53C48.9105 11.4839 48.2734 12.3245 47.4681 12.9819C46.6628 13.6394 45.7125 14.0947 44.6962 14.31C43.3112 14.6512 41.8573 14.5835 40.51 14.115C39.5309 13.7938 38.6416 13.2449 37.9149 12.5132C37.1882 11.7814 36.6446 10.8877 36.3287 9.90504C36.0252 8.9972 35.8883 8.04178 35.9246 7.08504C35.935 6.22524 36.0833 5.3727 36.3637 4.56004C36.7403 3.438 37.4102 2.4376 38.3034 1.66291C39.1967 0.888223 40.2808 0.367545 41.443 0.155044C42.7724 -0.122799 44.1523 -0.0329226 45.4346 0.415044C46.3952 0.73898 47.2673 1.28266 47.9818 2.00299C48.6963 2.72332 49.2335 3.60051 49.551 4.56504C49.7832 5.20858 49.9227 5.88203 49.9651 6.56504C49.9801 6.80004 49.995 7.03004 50 7.15004ZM47.6051 7.27004C47.6051 7.00004 47.5701 6.72504 47.5402 6.45504C47.4762 5.79789 47.2901 5.15855 46.9913 4.57004C46.7364 4.04153 46.3752 3.57151 45.9305 3.18948C45.4857 2.80746 44.967 2.52167 44.4068 2.35004C43.703 2.13325 42.9597 2.07688 42.2313 2.18504C41.1398 2.31857 40.143 2.87271 39.4522 3.73004C38.9475 4.35316 38.6047 5.09181 38.4543 5.88004C38.308 6.5581 38.2709 7.25525 38.3445 7.94504C38.4143 8.62968 38.6088 9.29569 38.9183 9.91004C39.3883 10.9058 40.2254 11.6801 41.2534 12.07C41.9482 12.3337 42.6948 12.4313 43.4338 12.355C44.0921 12.3036 44.731 12.1072 45.3049 11.78C46.1749 11.2608 46.838 10.4549 47.1809 9.50004C47.4558 8.78855 47.5995 8.03297 47.6051 7.27004Z" fill="#fff" />
+                            <path d="M8.26268 7.99992L8.50218 8.10992C9.16201 8.38786 9.69052 8.90853 9.97908 9.56492C10.1299 9.89413 10.2421 10.2398 10.3134 10.5949C10.5595 11.7349 10.8024 12.8716 11.0418 14.0049C11.0418 14.0949 11.0768 14.1799 11.0917 14.2849C11.051 14.2971 11.0093 14.3055 10.967 14.3099H8.77162H8.70176C8.70176 14.2599 8.65686 14.1999 8.64189 14.1399C8.44231 13.1899 8.24106 12.2399 8.03816 11.2899C7.98826 11.0449 7.91841 10.7899 7.85354 10.5699C7.83884 10.5148 7.81879 10.4612 7.79367 10.4099C7.65361 9.98792 7.39595 9.6149 7.05114 9.33493C6.70633 9.05496 6.28876 8.87972 5.84776 8.82992C5.57821 8.79254 5.30656 8.7725 5.03446 8.76992H2.96381C2.87854 8.75387 2.79035 8.76801 2.71434 8.80992C2.6844 9.06492 2.71434 9.30992 2.71434 9.58992V14.2949C2.67172 14.3062 2.62838 14.3146 2.58461 14.3199H0.444103C0.407577 14.323 0.370858 14.323 0.334333 14.3199V14.1749C0.331834 14.1266 0.331834 14.0782 0.334333 14.0299V0.589918C0.334333 0.489918 0.334333 0.394918 0.334333 0.284918C0.404122 0.280678 0.474104 0.280678 0.543893 0.284918H6.18704C6.84566 0.277725 7.5011 0.377345 8.12797 0.579918C8.49562 0.700865 8.84612 0.868924 9.17078 1.07992C9.89975 1.55136 10.432 2.27317 10.6676 3.10992C10.8921 3.89241 10.8921 4.72243 10.6676 5.50492C10.5362 5.98803 10.3047 6.43802 9.98841 6.82565C9.67207 7.21329 9.2779 7.5299 8.83149 7.75492C8.74667 7.80492 8.65686 7.84492 8.56705 7.88992L8.26268 7.99992ZM2.71434 6.65992H6.34172C6.60492 6.64956 6.86458 6.59549 7.1101 6.49992C7.41438 6.39135 7.6871 6.20895 7.90389 5.96902C8.12068 5.72909 8.2748 5.43909 8.3525 5.12492C8.41737 4.87716 8.43764 4.6198 8.41237 4.36492C8.39377 3.97553 8.26202 3.60007 8.03332 3.28472C7.80461 2.96936 7.48892 2.72787 7.12507 2.58992C6.835 2.47135 6.52524 2.40859 6.21199 2.40492H2.99375C2.90784 2.38934 2.81924 2.39979 2.73928 2.43492C2.70436 2.67992 2.68939 4.93492 2.73928 6.46992C2.69937 6.49992 2.70935 6.56992 2.71434 6.65992Z" fill="#fff" />
+                        </svg></a>
+
+                    </div>
+                    <div class="bot__inner__col1">
+                        <p>About</p>
+                        <ul>
+                            <li>Compare</li>
+                            <li>Reviews</li>
+                            <li>Risk-Free Trial</li>
+                            <li>Careers</li>
+                            <li>Press</li>
+                            <li>Podcast</li>
+                            <li>Blog</li>
+                        </ul>
+                        <p>Showrooms</p>
+                        <ul>
+                            <li>New York</li>
+                            <li>London</li>
+                            <li>San Francisco</li>
+                            <li>Paris</li>
+                            <li>Copenhagen</li>
+                            <li>Zürich</li>
+                            <li>Los Angeles</li>
+                            <li>Berlin</li>
+                            <li>Belgium</li>
+                            <li>Muhasransk</li>
+                        </ul>
+                    </div>
+                    <div class="bot__inner__col1">
+                        <p>Support</p>
+                        <ul>
+                            <li>FAQ</li>
+                            <li>Booth Assembly</li>
+                            <li>Delivery</li>
+                            <li>Room Service</li>
+                            <li>Warranty</li>
+                            <li>Terms of Use</li>
+                            <li>Privacy Policy</li>
+                            <li>Copyright</li>
+                        </ul>
+                        <p>Office</p>
+                        <ul>
+                            <li>599 Broadway, FL 9 New York, NY 10012</li>
+                        </ul>
+                    </div>
+                    <div class="bot__inner__col1">
+                        <p>Follow us</p>
+                        <div class="bot__inner__col1__mess">
+                            <a href="https://www.facebook.com/" target="_blank"><img src="src/img/mes1.png" alt="mes1" width="20px" height="20px" class="mr13"></a>
+                            <a href="https://www.linkedin.com/" target="_blank"><img src="src/img/mes2.png" alt="mes2" width="20px" height="20px" class="mr13"></a>
+                            <a href="https://www.pinterest.com/" target="_blank"><img src="src/img/mes3.png" alt="mes3" width="20px" height="20px" class="mr13"></a>
+                            <a href="https://www.instagram.com/" target="_blank"><img src="src/img/mes4.png" alt="mes4" width="20px" height="20px" class="mr13"></a>
+                        </div>
+                    </div>
+                    <div class="bot__inner__col1 bot__inner__mail">
+                        <div class="bot__inner__mail__t">
+                            <p>Join our mailing list </p>
+                            <p>Be the first to hear everything about ROOM.</p>
+                        </div>
+                        <div class="bot__inner__mail__input">
+                            <input type="text" class="bot__inner__mail__input__input">
+                        </div>
+                        <div class="bot__inner__mail__conf">
+                            <input type="checkbox" class="bot__inner__mail__conf__inp">
+                            <p class="c-grey"> Yes. I would like to receive marketing communications from ROOM about product updates and special offers. Please refer to ROOM’s Privacy Policy for more information about how we process your data (including how to unsubscribe).
+                            </p>
+                        </div>
+                        <div class="su">
+                            <a href="signUp.php">SIGN UP</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- BOT end -->
+        </div>
+    </div>
+    <script src="js/index.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script> -->
+</body>
+
+</html>

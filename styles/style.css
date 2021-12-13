@@ -25,13 +25,22 @@ li {
 a {
   text-decoration: none;
   color: inherit;
-  transition: 0.1s all ease;
+  transition: 0.15s all ease;
+  position: relative;
+  top: 0px;
 }
 a:hover {
-  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.6);
+  top: -5px;
+  text-shadow: -2px 5px 3px #757575;
 }
 .btn {
   border: 0;
+}
+.slider__control {
+  text-shadow: none;
+}
+.slider__control:hover {
+  top: 50%;
 }
 .content {
   width: 1440px;
@@ -111,6 +120,16 @@ a:hover {
   margin: 0px 50px;
   font-size: 14px;
   cursor: pointer;
+  height: 100%;
+}
+.header__m__cont__el a {
+  transition: 0.15s all ease;
+  position: relative;
+  top: 0px;
+}
+.header__m__cont__el a:hover {
+  top: -5px;
+  text-shadow: -2px 5px 3px #757575;
 }
 .main {
   padding-top: 190px;
@@ -510,6 +529,11 @@ a:hover {
   transform: none;
   color: rgba(211, 211, 211, 0.6);
   text-decoration: none;
+}
+.rtt a:hover {
+  color: rgba(211, 211, 211, 0.9);
+  text-shadow: 0 0 black;
+  top: 0px;
 }
 #pr {
   position: relative;

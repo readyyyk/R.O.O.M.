@@ -28,15 +28,23 @@ li{
 a{
     text-decoration: none;
     color: inherit;
-    transition: 0.1s all ease;
+    transition: .15s all ease;
+    position: relative;
+    top: 0px;
     &:hover{
-        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.6 );
+        top:-5px;
+        text-shadow: -2px 5px 3px #757575;
     }
 }
 .btn{
     border:0;
 }
-
+.slider__control{
+    &:hover{
+        top: 50%;
+    }
+    text-shadow: none;
+}
 .content {
     width: 1440px;
     background: #fff;
@@ -116,6 +124,16 @@ a{
                 margin: 0px 50px;
                 font-size: 14px;
                 cursor: pointer;
+                height: 100%;
+                & a{
+                    transition: .15s all ease;
+                    position: relative;
+                    top: 0px;
+                    &:hover{
+                        top:-5px;
+                        text-shadow: -2px 5px 3px #757575;
+                    }
+                }
             }
             }
     }
@@ -538,6 +556,11 @@ a{
         transform: none;
         color: rgba(211, 211, 211, 0.6);
         text-decoration: none;
+        &:hover{
+            color: rgba(211, 211, 211, 0.9);
+            text-shadow: 0 0 black;
+            top: 0px;
+        }
     }
 }
 
